@@ -86,8 +86,9 @@ if ostype =~ /windows/
     end
   end
 
-  include_recipe "os::logrotate_windows"
-  include_recipe "os::network_windows"
+  include_recipe 'windows-update::add'
+  include_recipe 'os::logrotate_windows'
+  include_recipe 'os::network_windows'
 
   #Determine if additional restart needed
   features.each do |feature|

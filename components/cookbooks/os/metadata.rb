@@ -3,9 +3,10 @@ description "Installs/Configures OperatingSystem"
 maintainer "OneOps"
 maintainer_email "support@oneops.com"
 license "Apache License, Version 2.0"
-depends "shared"
-depends "simple_iptables"
+depends 'shared'
+depends 'simple_iptables'
 depends 'security'
+depends 'windows-update'
 
 grouping 'default',
          :access   => "global",
@@ -337,3 +338,29 @@ recipe 'apply-security-compliance',
        }
 
 recipe 'reconfig-network', "Reconfig Network"
+
+recipe 'windows-update',
+       :description => 'Run Windows Updates',
+       :args        => {
+         'action' => {
+           'name'         => 'action',
+           'description'  => 'Available actions: detect|download|install',
+           'defaultValue' => :detect,
+           'required'     => true,
+           'dataType'     => 'String'
+         },
+         'handle_reboot' => {
+           'name'         => 'handle_reboot',
+           'description'  => 'Perform a reboot?',
+           'defaultValue' => false,
+           'required'     => true,
+           'dataType'     => 'boolean'
+         },
+         'reboot_delay' => {
+           'name'         => 'reboot_delay',
+           'description'  => 'Enter reboot delay in minutes',
+           'defaultValue' => 1,
+           'required'     => true,
+           'dataType'     => 'FixNum'
+         }
+       }

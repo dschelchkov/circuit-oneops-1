@@ -16,6 +16,7 @@ platform :attributes => {
 
 # dns service needed for ptr record cleanup on replace
 
+
 resource "filebeat",
   :cookbook => "oneops.1.filebeat",
   :design => true,
@@ -108,7 +109,7 @@ resource "compute",
 resource "os",
   :cookbook => "oneops.1.os",
   :design => true,
-  :requires => { "constraint" => "1..1", "services" => "compute,dns,*mirror,*ntp,*windows-domain" },
+  :requires => { "constraint" => "1..1", "services" => "compute,dns,*mirror,*ntp,*windows-domain,*windows-update" },
   :attributes => { "ostype"  => "centos-7.2",
                    "dhclient"  => 'true'
                  },
@@ -211,7 +212,25 @@ resource "os",
           }
         ]
       }'
-    }
+    },
+    'windows-update-component' => {
+     'description' => 'Windows-update component depending on Os',
+     'definition' => '{
+       "returnObject": false,
+       "returnRelation": false,
+       "relationName": "base.RealizedAs",
+       "direction": "to",
+       "targetClassName": "manifest.oneops.1.Os",
+       "relations": [
+         { "returnObject": true,
+           "returnRelation": false,
+           "relationName": "manifest.DependsOn",
+           "direction": "to",
+           "targetClassName": "manifest.oneops.1.Windows-update"
+         }
+       ]
+     }'
+   }
   }
 
 
@@ -953,12 +972,21 @@ resource "artifact",
   :requires => { "constraint" => "0..*" }
 
 resource "service-mesh",
-	:cookbook => "oneops.1.service-mesh",
-	:design => true,
-	:requires => {
-    	"constraint" => "0..1",
-    	'services' => 'servicemeshcloudservice'
+  :cookbook => "oneops.1.service-mesh",
+  :design => true,
+  :requires => {
+      "constraint" => "0..1",
+      'services' => 'servicemeshcloudservice'
      }
+
+resource 'windows-update',
+  :cookbook => 'oneops.1.windows-update',
+  :design   => true,
+  :requires => {
+    :constraint => '0..1',
+    :services   => '*windows-update'
+  }
+
 
 # depends_on
 [ { :from => 'compute',     :to => 'secgroup' } ].each do |link|
@@ -1001,7 +1029,8 @@ end
   { :from => 'secrets-client',  :to => 'volume'},
   { :from => 'objectstore',  :to => 'user'},
   { :from => 'service-mesh', :to => 'os'},
-  { :from => 'service-mesh', :to => 'volume'  }
+  { :from => 'service-mesh', :to => 'volume'},
+  { :from => 'windows-update', :to => 'os'}
 ].each do |link|
   relation "#{link[:from]}::depends_on::#{link[:to]}",
     :relation_name => 'DependsOn',
@@ -1048,7 +1077,7 @@ end
 
 # managed_via
 [ 'os', 'telegraf', 'filebeat', 'user', 'job', 'file', 'volume', 'share', 'download', 'library', 'daemon', 
-  'certificate', 'logstash', 'sensuclient', 'artifact', 'objectstore', 'secrets-client', 'service-mesh'].each do |from|
+  'certificate', 'logstash', 'sensuclient', 'artifact', 'objectstore', 'secrets-client', 'service-mesh', 'windows-update'].each do |from|
   relation "#{from}::managed_via::compute",
     :except => [ '_default' ],
     :relation_name => 'ManagedVia',
