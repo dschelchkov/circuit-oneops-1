@@ -59,7 +59,7 @@ platform_name = node.workorder.box.ciName
 logical_name = node.workorder.rfcCi.ciName
 
 l_switch = size =~ /%/ ? '-l' : '-L'
-f_switch = node['platform'] == 'centos' && node['platform_version'].to_i < 7 ? '-f' : ''
+f_switch = ''
 _mount_point = nil
 _device = nil
 _fstype = nil
