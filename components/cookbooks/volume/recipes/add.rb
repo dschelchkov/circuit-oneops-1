@@ -63,7 +63,7 @@ elsif mode == 'raid10' && (device_maps.size < 4 || device_maps.size%2 != 0)
 end
 
 l_switch = size =~ /%/ ? '-l' : '-L'
-f_switch = node['platform'] == 'centos' && node['platform_version'].to_i < 7 ? '-f' : ''
+f_switch = ''
 _mount_point = nil
 _device = nil
 _fstype = nil
