@@ -39,20 +39,23 @@ set_env()
 
 install_base_centos()
 {
-  yum -d0 -e0 -y install sudo file make gcc gcc-c++ glibc-devel libgcc libxml2-devel libxslt-devel perl perl-Digest-MD5 nagios nagios-devel nagios-plugins
+  yum -d0 -e0 -y install sudo file make gcc gcc-c++ glibc-devel libgcc libxml2-devel libxslt-devel perl libyaml perl-Digest-MD5 nagios nagios-devel nagios-plugins
+  if [ "$major" -lt 7 ] ; then
+    yum -d0 -e0 -y install parted
+  fi
 }
 
 install_ruby_centos()
 {
-  release=$(cat /etc/redhat-release | grep -o '[0-9]\.[0-9]')
-  major=${release%.*}
+  if [ "$cloud_provider" == "azure" ] && [ "$major" -lt 7 ] && [ ! -n "$ruby_binary_path" ]; then
+    echo "Centos 6.x VMs on Azure clouds require Ruby 2.0.0"
+    echo "Please add ruby_binary_path env variable in compute cloud service"
+    exit 1
+  fi
 
-  # explicitly installing ruby 2.0.0 from a binary for CentOs 6.x
-  if [ "$major" -lt 7 ] ; then
-    yum -d0 -e0 -y install parted
-    if [ -n "$ruby_binary_path" ] ; then
-      install_ruby_binary_if_not_installed
-    fi
+  # installing ruby 2.0.0 from a binary for CentOs 6.x if env variable is there
+  if [ "$major" -lt 7 ] && [ -n "$ruby_binary_path" ] ; then
+    install_ruby_binary_if_not_installed
   else
     yum -d0 -e0 -y install ruby ruby-libs ruby-devel ruby-rdoc rubygems
   fi
@@ -152,6 +155,8 @@ if [ -e /etc/SuSE-release ] ; then
 
 # redhat / centos
 elif [ -e /etc/redhat-release ] ; then
+  release=$(cat /etc/redhat-release | grep -o '[0-9]\.[0-9]')
+  major=${release%.*}
   install_base_centos
   install_ruby_centos
 
@@ -303,5 +308,5 @@ if [ "$owner" == "root" ] ; then
   chown -R oneops:oneops /home/oneops /opt/oneops
   chown -R nagios:nagios /etc/nagios /var/log/nagios /etc/nagios/conf.d
 else
-  chown -R oneops:oneops /home/oneops/circuit-oneops-1 /home/oneops/shared /home/oneops/.ssh /opt/oneops/workorder /opt/oneops/rubygems_proxy
+  chown -R oneops:oneops /home/oneops/.ssh /opt/oneops/workorder /opt/oneops/rubygems_proxy
 fi
