@@ -101,7 +101,9 @@ node.monitors.each do |mon|
   monitor_name = mon[:monitor_name]
 
   #monitor_type
-  if ['UDP','TCP'].include?(protocol)
+  if monitor_attrs.has_key(:type)
+    monitor_type =  monitor_attrs[:type]
+  elsif ['UDP','TCP'].include?(protocol)
     monitor_type =  protocol
   elsif protocol == 'MSSQL'
     monitor_type =  'MSSQL-ECV'
@@ -124,11 +126,15 @@ node.monitors.each do |mon|
   }
 
   #Adding protocol-specific attributes
-  if monitor_type == 'HTTP'
-    monitor.merge!({:respcode => ['200'], :httprequest => ecv})
-  else
-    monitor.merge!(monitor_attrs)
+  if monitor_type == 'HTTP' && !monitor_attrs.has_key(:respcode)
+    monitor.merge!({ :respcode => ['200'] }
   end
+
+  if monitor_type == 'HTTP' && !monitor_attrs.has_key(:httprequest)
+    monitor.merge!({ :httprequest => ecv })
+  end
+
+  monitor.merge!(monitor_attrs)
 
   # cleanup previous az
   if node.has_key?("ns_conn_prev")
