@@ -95,26 +95,6 @@ describe 'azure lb' do
       end
     end
 
-    it 'protocol is set to backend protocol of a matching listener' do
-      listeners_from_wo = @work_order_utils.listeners
-
-      lb_svc = AzureNetwork::LoadBalancer.new(@spec_utils.get_azure_creds)
-      load_balancer = lb_svc.get(@spec_utils.get_resource_group_name, @spec_utils.get_lb_name)
-      probes = load_balancer.probes
-
-      probes.each do |p|
-        listener = listeners_from_wo.detect {|l| l[:iport].to_i == p.port}
-
-        if !listener.nil?
-          expected_probe_protocol = 'http'
-          if listener[:iprotocol].downcase == 'https' || listener[:iprotocol].downcase == 'tcp'
-            expected_probe_protocol = 'tcp'
-          end
-          expect(p.protocol.downcase).to eq(expected_probe_protocol)
-        end
-      end
-    end
-
   end
 
   context 'listeners' do
